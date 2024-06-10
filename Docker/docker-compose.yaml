@@ -1,0 +1,45 @@
+services:
+  homeassistant:
+    image: homeassistant/home-assistant:latest
+    restart: always
+    volumes:
+      - /opt/docker/homeassistant:/config
+      - /opt/docker/homeassistant/images:/images
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    ports:
+      - 8123:8123
+
+  pihole:
+    image: pihole/pihole:latest
+    restart: always
+    hostname: pi.hole
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - /opt/docker/pihole/etc-pihole:/etc/pihole
+      - /opt/docker/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 80:80/tcp
+    env_file:
+      - /opt/docker/pihole/credentials.env
+
+  postgresql:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - /opt/docker/postgresql/data:/var/lib/postgresql/data
+    env_file:
+      - /opt/docker/postgresql/credentials.env
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - 8080:80
+    env_file:
+      - /opt/docker/pgadmin/credentials.env
