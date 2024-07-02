@@ -1,24 +1,59 @@
 services:
-  homeassistant:
+  home-assistant:
+    container_name: home-assistant
     image: homeassistant/home-assistant:latest
     restart: always
-    network_mode: host
+    depends_on:
+      - mosquitto
+    ports:
+      - 8123:8123
+      - 1400:1400
     volumes:
-      - /opt/docker/homeassistant:/config
+      - /opt/docker/home-assistant/config:/config
+      - /opt/docker/home-assistant/media:/media
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
 
-  postgresql:
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt
+    restart: always
+    stop_grace_period: 2m
+    depends_on:
+      - mosquitto
+    ports:
+      - "8099:8099/tcp"
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - /opt/docker/zigbee2mqtt/data:/app/data
+      - /run/udev:/run/udev:ro
+    devices:
+      - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_865a146755afed119e873b4e71c9e8b5-if00-port0:/dev/ttyACM0
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    restart: always
+    ports:
+      - 1883:1883
+      - 1884:1884
+    volumes:
+      - /opt/docker/mosquitto/config:/mosquitto/config
+      - /opt/docker/mosquitto/data:/mosquitto/data
+      - /opt/docker/mosquitto/log:/mosquitto/log
+
+  postgres:
+    container_name: postgres
     image: postgres:latest
     restart: always
-    volumes:
-      - /opt/docker/postgresql/data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     env_file:
-      - /opt/docker/postgresql/credentials.env
+      - /opt/docker/postgres/credentials.env
 
   pgadmin:
+    container_name: pgadmin
     image: dpage/pgadmin4:latest
     ports:
       - 8080:80
