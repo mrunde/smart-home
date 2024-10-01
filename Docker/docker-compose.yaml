@@ -52,10 +52,12 @@ services:
     env_file:
       - /opt/docker/postgres/credentials.env
 
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:latest
+  piper:
+    container_name: piper
+    image: rhasspy/wyoming-piper
+    command: --voice de_DE-thorsten-high
+    volumes:
+      - /opt/docker/piper/data:/data
+    restart: unless-stopped
     ports:
-      - 8080:80
-    env_file:
-      - /opt/docker/pgadmin/credentials.env
+      - 10200:10200

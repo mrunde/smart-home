@@ -41,18 +41,19 @@ directory of the Raspberry Pi.
 Also create the following directories:
 
 ```
-/opt/docker/home-assistant/config
-/opt/docker/home-assistant/media
+sudo mkdir /opt/docker/home-assistant/config
+sudo mkdir /opt/docker/home-assistant/media
 
-/opt/docker/zigbee2mqtt/data
+sudo mkdir /opt/docker/zigbee2mqtt/data
 
-/opt/docker/mosquitto/config
-/opt/docker/mosquitto/data
-/opt/docker/mosquitto/log
+sudo mkdir /opt/docker/mosquitto/config
+sudo mkdir /opt/docker/mosquitto/data
+sudo mkdir /opt/docker/mosquitto/log
 
-/opt/docker/postgres
+sudo mkdir /opt/docker/postgres
 
-/opt/docker/pgadmin
+sudo mkdir /opt/docker/piper
+sudo mkdir /opt/docker/piper/data
 ```
 
 Finally, you have to copy the `credentials.env` and `mosquitto.conf` files into their respective directories (e.g. 
