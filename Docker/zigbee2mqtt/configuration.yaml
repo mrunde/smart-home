@@ -24,6 +24,20 @@ frontend:
 devices: devices.yaml
 groups: groups.yaml
 
+# Device availability
+availability:
+  active:
+    # Time after which an active device will be marked as offline in minutes (default = 10 minutes)
+    timeout: 30
+  passive:
+    # Time after which a passive device will be marked as offline in minutes (default = 1500 minutes aka 25 hours)
+    timeout: 1500
+
+device_options:
+  homeassistant:
+    last_seen:
+      enabled_by_default: true
+
 # Serial settings
 serial:
   # Location of CC2531 USB sniffer
@@ -35,3 +49,5 @@ advanced:
   network_key: GENERATE
   # Zigbee network - set channel to avoid interference with 2.4GHz WiFi
   channel: 24
+  # Add a timestamp to the messages to track when a device was last seen
+  last_seen: ISO_8601_local
