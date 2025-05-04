@@ -14,11 +14,22 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
 
+  esphome:
+    container_name: esphome
+    image: esphome/esphome
+    restart: always
+    privileged: true
+    network_mode: host
+    depends_on:
+      - home-assistant
+    volumes:
+      - /opt/docker/esphome/config:/config
+      - /etc/localtime:/etc/localtime:ro
+
   zigbee2mqtt:
     container_name: zigbee2mqtt
     image: koenkk/zigbee2mqtt
     restart: always
-    stop_grace_period: 2m
     depends_on:
       - mosquitto
     ports:
