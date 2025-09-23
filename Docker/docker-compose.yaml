@@ -1,7 +1,7 @@
 services:
   home-assistant:
     container_name: home-assistant
-    image: homeassistant/home-assistant:latest
+    image: homeassistant/home-assistant:2025.9.3
     restart: always
     depends_on:
       - mosquitto
@@ -14,9 +14,20 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
 
+  music-assistant:
+    container_name: music-assistant
+    image: ghcr.io/music-assistant/server:2.5.8
+    restart: unless-stopped
+    # Network mode must be set to host for MA to work correctly
+    network_mode: host
+    depends_on:
+      - home-assistant
+    volumes:
+      - /opt/docker/music-assistant/data:/data/
+
   esphome:
     container_name: esphome
-    image: esphome/esphome
+    image: esphome/esphome:2025.8.2
     restart: always
     privileged: true
     network_mode: host
