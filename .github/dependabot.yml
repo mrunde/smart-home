@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/Docker/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "_"
+    commit-message:
+      prefix: "[dependabot]"
+    labels:
+      - "dependabot"
