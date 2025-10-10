@@ -1,7 +1,7 @@
 version: 2
 updates:
-  - package-ecosystem: "docker"
-    directory: "/Docker/"
+  - package-ecosystem: "docker-compose"
+    directory: "/Docker"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -12,5 +12,4 @@ updates:
       separator: "_"
     commit-message:
       prefix: "[dependabot]"
-    labels:
-      - "dependabot"
+    labels: ["dependabot"]
