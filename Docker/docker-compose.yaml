@@ -12,7 +12,12 @@ services:
       - /opt/docker/home-assistant/config:/config
       - /opt/docker/home-assistant/media:/media
       - /etc/localtime:/etc/localtime:ro
+      # Necessary for bluetooth
       - /run/dbus:/run/dbus:ro
+    cap_add:
+      # Necessary for bluetooth
+      - NET_ADMIN
+      - NET_RAW
 
   music-assistant:
     container_name: music-assistant
@@ -20,8 +25,6 @@ services:
     restart: unless-stopped
     # Network mode must be set to host for MA to work correctly
     network_mode: host
-    depends_on:
-      - home-assistant
     volumes:
       - /opt/docker/music-assistant/data:/data/
 
@@ -39,7 +42,7 @@ services:
 
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt
+    image: koenkk/zigbee2mqtt:1.42.0
     restart: always
     depends_on:
       - mosquitto
