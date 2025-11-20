@@ -16,30 +16,18 @@ mqtt:
 
 # Webserver
 frontend:
-  port: 8099 # Custom port
+  enabled: true
+  # Custom port
+  port: 8099
   url: 'http://192.168.10.42'
 
-# Devices and groups
-# Extract config to separate files
+# Devices and groups config in separated files
 devices: devices.yaml
 groups: groups.yaml
 
-# Device availability
-availability:
-  active:
-    # Time after which an active device will be marked as offline in minutes (default = 10 minutes)
-    timeout: 30
-  passive:
-    # Time after which a passive device will be marked as offline in minutes (default = 1500 minutes aka 25 hours)
-    timeout: 1500
-
-device_options:
-  homeassistant:
-    last_seen:
-      enabled_by_default: true
-
 # Serial settings
 serial:
+  adapter: zstack
   # Location of CC2531 USB sniffer
   port: /dev/ttyACM0
 
@@ -51,3 +39,22 @@ advanced:
   channel: 24
   # Add a timestamp to the messages to track when a device was last seen
   last_seen: ISO_8601_local
+  # Log directory
+  log_directory: data/log
+
+device_options:
+  homeassistant:
+    last_seen:
+      enabled_by_default: true
+
+# Device availability
+availability:
+  enabled: true
+  # Time after which an active device will be marked as offline in minutes (default = 10 minutes)
+  active:
+    timeout: 30
+  # Time after which a passive device will be marked as offline in minutes (default = 1500 minutes aka 25 hours)
+  passive:
+    timeout: 1500
+
+version: 4
