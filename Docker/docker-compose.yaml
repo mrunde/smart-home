@@ -42,7 +42,7 @@ services:
 
   zigbee2mqtt:
     container_name: zigbee2mqtt
-    image: koenkk/zigbee2mqtt:2.6.3
+    image: koenkk/zigbee2mqtt:2.7.1
     restart: always
     depends_on:
       - mosquitto
