@@ -30,7 +30,7 @@ services:
 
   esphome:
     container_name: esphome
-    image: esphome/esphome:2025.11.5
+    image: esphome/esphome:2025.12.1
     restart: always
     privileged: true
     network_mode: host
