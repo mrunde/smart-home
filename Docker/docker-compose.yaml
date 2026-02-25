@@ -76,6 +76,8 @@ services:
       - 5432:5432
     env_file:
       - /opt/docker/postgres/credentials.env
+    volumes:
+      - /opt/docker/postgres/data:/var/lib/postgresql/data
 
   piper:
     container_name: piper
