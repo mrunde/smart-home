@@ -2,7 +2,9 @@ services:
   home-assistant:
     container_name: home-assistant
     image: homeassistant/home-assistant:2026.2.3
-    restart: always
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
     depends_on:
       - mosquitto
     ports:
@@ -31,7 +33,7 @@ services:
   esphome:
     container_name: esphome
     image: esphome/esphome:2026.2.2
-    restart: always
+    restart: unless-stopped
     privileged: true
     network_mode: host
     depends_on:
@@ -43,7 +45,7 @@ services:
   zigbee2mqtt:
     container_name: zigbee2mqtt
     image: koenkk/zigbee2mqtt:2.9.0
-    restart: always
+    restart: unless-stopped
     depends_on:
       - mosquitto
     ports:
@@ -59,7 +61,7 @@ services:
   mosquitto:
     container_name: mosquitto
     image: eclipse-mosquitto
-    restart: always
+    restart: unless-stopped
     ports:
       - 1883:1883
       - 1884:1884
@@ -71,20 +73,10 @@ services:
   postgres:
     container_name: postgres
     image: postgres:latest
-    restart: always
+    restart: unless-stopped
     ports:
       - 5432:5432
     env_file:
       - /opt/docker/postgres/credentials.env
     volumes:
       - /opt/docker/postgres/data:/var/lib/postgresql/data
-
-  piper:
-    container_name: piper
-    image: rhasspy/wyoming-piper
-    command: --voice de_DE-thorsten-high
-    volumes:
-      - /opt/docker/piper/data:/data
-    restart: unless-stopped
-    ports:
-      - 10200:10200
