@@ -32,7 +32,7 @@ services:
 
   esphome:
     container_name: esphome
-    image: esphome/esphome:2026.3.3
+    image: esphome/esphome:2026.4.1
     restart: unless-stopped
     privileged: true
     network_mode: host
