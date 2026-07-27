@@ -1,7 +1,7 @@
 services:
   home-assistant:
     container_name: home-assistant
-    image: homeassistant/home-assistant:2026.7.2
+    image: homeassistant/home-assistant:2026.7.4
     privileged: true
     network_mode: host
     restart: unless-stopped
