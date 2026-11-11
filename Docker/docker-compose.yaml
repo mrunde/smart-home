@@ -42,26 +42,6 @@ services:
       - /opt/docker/esphome/config:/config
       - /etc/localtime:/etc/localtime:ro
 
-  opentodo:
-    container_name: opentodo
-    image: ghcr.io/opentodoapp/opentodo:1.2.0
-    restart: unless-stopped
-    ports:
-      - 7000:8080
-    environment:
-      OPENTODO_BASE_URL: ""
-      OPENTODO_SETUP_TOKEN: ""
-      OPENTODO_ALLOW_SIGNUP: "false"
-      OPENTODO_TRUSTED_PROXIES: ""
-    volumes:
-      - /opt/docker/opentodo/data:/data
-    healthcheck:
-      test: ["CMD", "/opentodo", "healthcheck"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
   zigbee2mqtt:
     container_name: zigbee2mqtt
     image: koenkk/zigbee2mqtt:2.14.3
