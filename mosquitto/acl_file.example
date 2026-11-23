@@ -1,0 +1,10 @@
+# Home Assistant
+user homeassistant
+topic readwrite #
+
+# Zigbee2MQTT
+user zigbee2mqtt
+topic readwrite #
+
+# ESPHome and other MQTT clients
+pattern readwrite esp32/%u/# 

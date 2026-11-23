@@ -1,0 +1,88 @@
+esphome:
+  name: esp32-cam-1
+  friendly_name: ESP32-CAM-1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret esp32_cam_1_api_key
+
+ota:
+  - platform: esphome
+    password: !secret esp32_cam_1_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  manual_ip:
+    static_ip: 192.168.10.30
+    gateway: 192.168.10.1
+    subnet: 255.255.255.0
+    dns1: 192.168.10.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32-Cam-1 Fallback Hotspot"
+    password: !secret esp32_cam_1_ap_password
+
+captive_portal:
+
+# Camera
+esp32_camera:
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+
+  # Image settings
+  name: ESP32-CAM-1
+  icon: mdi:camera
+  idle_framerate: 1 fps
+  max_framerate: 20 fps
+  resolution: 800x600
+  jpeg_quality: 15
+  horizontal_mirror: false
+  vertical_flip: false
+
+# Camera Stream Web Server
+#esp32_camera_web_server:
+  #- port: 8080
+  #  mode: stream
+
+# Flashlight
+output:
+  - platform: ledc
+    pin: GPIO4
+    id: gpio_4
+    channel: 2
+light:
+  - platform: binary
+    output: gpio_4
+    name: "ESP32 Cam 1 Light"
+
+switch:
+  - platform: restart
+    name: "ESP32 Cam 1 Restart"
+
+sensor:
+  - platform: uptime
+    name: "ESP32 Cam 1 Uptime Sensor"
+  - platform: wifi_signal
+    name: "ESP32 Cam 1 WiFi Signal"
+    update_interval: 60s

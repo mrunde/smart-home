@@ -13,3 +13,19 @@ out/
 ### Private env files ###
 *.private.env.json
 *_local.env
+.env
+credentials.env
+mosquitto/password_file
+mosquitto/acl_file
+esphome/secrets.yaml
+
+### Docker runtime data ###
+**/.esphome/
+backups/
+home-assistant/
+music-assistant/
+esphome/config/
+zigbee2mqtt/data/
+mosquitto/data/
+mosquitto/log/
+postgres/data/

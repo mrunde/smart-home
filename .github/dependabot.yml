@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "docker-compose"
-    directory: "/Docker"
+    directory: ""
     schedule:
       interval: "weekly"
       day: "monday"

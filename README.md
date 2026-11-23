@@ -1,142 +1,130 @@
 # smart-home
 
-Smart Home application running on a Raspberry Pi
+Smart home services running on a Raspberry Pi with Docker Compose.
 
-## Setup
+## Set up the Raspberry Pi
 
-This describes the initial setup of the project.
+1. Use Raspberry Pi Imager to install a 64-bit Raspberry Pi OS on the Pi. Configure a
+   user, network connection, and SSH in the Imager settings, then boot the Pi and
+   sign in locally or over SSH.
+2. Update the system and install Git:
 
-- Update and upgrade the Raspberry Pi
+   ```sh
+   sudo apt update
+   sudo apt upgrade
+   sudo apt install git
+   ```
+3. Install Docker:
 
-    ```
-    sudo apt update
-    sudo apt upgrade
-    ```
+   ```sh
+   curl -sSL https://get.docker.com | sh
+   ```
+4. Start Docker and allow your user to run it without `sudo`:
 
-- Install Docker
+   ```sh
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker "$USER"
+   ```
 
-    ```
-    curl -sSL https://get.docker.com | sh
-  
-    docker --version
-    ```
+   Log out and back in so that the new group membership takes effect. Verify with
+   `docker version` and `docker compose version`. Membership in the `docker`
+   group grants root-equivalent privileges; only grant it to trusted users.
 
-- Add your user to the Docker group
+## Prepare the deployment
 
-    ```
-    sudo usermod -aG docker $USER
-    ```
+Clone the repository as your normal user, not as root. The Compose file and
+service directories are in the repository root:
 
-- Logout to apply the changes to the user
-
-    ```
-    logout
-    ```
-
-## Run with Docker Compose
-
-After the setup you have to copy the [`docker-compose.yaml`](Docker/docker-compose.yaml) into the `/opt/docker` 
-directory of the Raspberry Pi.
-
-Also create the following directories:
-
-```
-sudo mkdir /opt/docker/home-assistant/config
-sudo mkdir /opt/docker/home-assistant/media
-
-sudo mkdir /opt/docker/zigbee2mqtt/data
-
-sudo mkdir /opt/docker/mosquitto/config
-sudo mkdir /opt/docker/mosquitto/data
-sudo mkdir /opt/docker/mosquitto/log
-
-sudo mkdir /opt/docker/postgres
-
-sudo mkdir /opt/docker/piper
-sudo mkdir /opt/docker/piper/data
+```sh
+cd ~
+git clone https://github.com/mrunde/smart-home.git
+cd smart-home
+cp .env.example .env
+cp mosquitto/acl_file.example mosquitto/acl_file
+mkdir -p home-assistant/config home-assistant/media music-assistant/data \
+  esphome/config zigbee2mqtt/data mosquitto/data mosquitto/log postgres/data
 ```
 
-Finally, you have to copy the `credentials.env` and `mosquitto.conf` files into their respective directories (e.g. 
-`/opt/docker/postgres`).
+Edit `.env`: set a strong PostgreSQL password and MQTT password, and set
+`ZIGBEE_DEVICE` to the actual adapter path shown by `ls -l /dev/serial/by-id/`.
+The supplied ACL expects `MOSQUITTO_USER=homeassistant`; update the ACL and
+the username in the `mosquitto_passwd` command below if you choose another
+username. Use distinct passwords for PostgreSQL and MQTT.
 
-### Mosquitto Configuration
+Create the MQTT password file interactively, using the value of
+`MOSQUITTO_PASSWORD` from `.env` for **both** accounts:
 
-The `mosquitto.conf` file is the [default configuration](https://raw.githubusercontent.com/eclipse/mosquitto/master/mosquitto.conf) only changed for the following properties:
+```sh
+docker compose run --rm --user "$(id -u):$(id -g)" mosquitto-setup \
+  -c /mosquitto/config/password_file homeassistant
 
-```
-# Listen on port 1883 on all IPv4 interfaces
-listener 1883
-socket_domain ipv4
+docker compose run --rm --user "$(id -u):$(id -g)" mosquitto-setup \
+  /mosquitto/config/password_file zigbee2mqtt
 
-# Save the in-memory database to disk
-persistence true
-persistence_location /mosquitto/data/
-
-# Log to stderr and logfile
-log_dest stderr
-log_dest file /mosquitto/log/mosquitto.log
-
-# Disable authentication
-allow_anonymous true
+chmod 644 mosquitto/password_file
+chmod 700 mosquitto
+chmod 600 .env
 ```
 
-Now you can start the Docker containers with the following command (`-d` for detached mode):
+The password file contains password hashes and must be readable by the broker
+inside its container. Keep it and `.env` private and never commit them. The
+`-c` command replaces an existing password file; do not
+repeat it unless you intend to recreate the accounts.
 
-```
+## Start the services
+
+For a **new** Zigbee2MQTT installation, seed its data directory once from
+the tracked configuration. The command leaves an existing configuration intact:
+
+```sh
+docker compose run --rm --no-deps --entrypoint sh zigbee2mqtt \
+  -c 'test -f /app/data/configuration.yaml || cp /seed/configuration.yaml /app/data/configuration.yaml'
+docker compose config --quiet
 docker compose up -d
+docker compose ps
+docker compose logs --tail=100
 ```
 
-## Update the Home Assistant Docker Container
+The seed command requires the Zigbee adapter configured in `.env` to be
+connected. Once seeded, Zigbee2MQTT manages its own configuration in the
+data directory; changing `zigbee2mqtt/configuration.yaml` in the repository does not
+automatically overwrite that live configuration.
 
-- Check the current images:
-  ```
-  docker images
-  ```
+Configure Home Assistant's MQTT integration to connect to `127.0.0.1:1883`
+using the configured `homeassistant` account and MQTT password. Zigbee2MQTT
+uses the `zigbee2mqtt` account over the Compose network. MQTT and PostgreSQL
+are published only on the Pi's loopback interface, so remote clients cannot
+connect directly.
 
-- Get the container ID:
-  ```
-  docker ps
-  ```
+## Updates
 
-- Stop the Home Assistant container:
-  ```
-  docker stop <container_id>
-  ```
+Review release notes and back up your data before updating images:
 
-- Remove the container and image:
-  ```
-  docker rm <container_id>
-  docker rmi <image_id>
-  ```
-
-- Pull the latest image:
-  ```
-  docker pull homeassistant/home-assistant:latest
-  ```
-
-- Start the updated container:
-  ```
-  docker compose up -d
-  ```
+```sh
+git pull
+docker compose pull
+docker compose up -d
+docker compose ps
+```
 
 ## Restore a Home Assistant Backup
 
-- Copy the backup file (e.g. `backup.tar`) from your Windows computer to the user's directory on the Raspberry Pi 
-  and from there to the `homeassistant` directory.
+Copy the backup file (e.g. `backup.tar`) from your Windows computer to the user's directory on the Raspberry Pi
+and from there to the `homeassistant` directory.
 
-  On your Windows computer:
-  ```
-  scp .\backup.tar <<USERNAME>>@raspberrypi.local:~/
-  ```
-  
-  On the Raspberry Pi:
-  ```
-  sudo cp /home/<<USERNAME>>/backup.tar /opt/docker/home-assistant/backup.tar
-  ```
+On your Windows computer:
+```bat
+scp .\backup.tar <<USERNAME>>@raspberrypi.local:~/
+```
 
-- Now go to the `/opt/docker/home-assistant` directory and extract the backup into the `config` directory. After 
-  that you can (re)start the Home Assistant Docker container.
+On the Raspberry Pi:
+```sh
+sudo cp /home/<<USERNAME>>/backup.tar ./home-assistant/backup.tar
+```
 
-  ```
-  sudo tar -xOf backup.tar homeassistant.tar.gz | sudo tar --strip-components=1 -zxf - -C config
-  ```
+Now go to the `/opt/docker/home-assistant` directory and extract the backup into the `config` directory. After
+that you can restart the Home Assistant Docker container.
+
+```sh
+sudo tar -xOf backup.tar homeassistant.tar.gz | sudo tar --strip-components=1 -zxf - -C config
+```

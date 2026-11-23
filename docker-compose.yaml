@@ -1,0 +1,89 @@
+services:
+  home-assistant:
+    container_name: home-assistant
+    image: homeassistant/home-assistant:2026.11.1
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    volumes:
+      - ./home-assistant/config:/config
+      - ./home-assistant/media:/media
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  music-assistant:
+    container_name: music-assistant
+    image: ghcr.io/music-assistant/server:2.10.12
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./music-assistant/data:/data/
+
+  esphome:
+    container_name: esphome
+    image: esphome/esphome:2026.10.2
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - home-assistant
+    volumes:
+      - ./esphome/config:/config
+      - /etc/localtime:/etc/localtime:ro
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt:2.14.3
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "8099:8099/tcp"
+    environment:
+      TZ: Europe/Berlin
+      ZIGBEE2MQTT_CONFIG_MQTT_SERVER: mqtt://mosquitto:1883
+      ZIGBEE2MQTT_CONFIG_MQTT_USER: zigbee2mqtt
+      ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD: ${MOSQUITTO_PASSWORD:?MOSQUITTO_PASSWORD must be set}
+    volumes:
+      - ./zigbee2mqtt/data:/app/data
+      - ./zigbee2mqtt/configuration.yaml:/seed/configuration.yaml:ro
+      - /run/udev:/run/udev:ro
+    devices:
+      - "${ZIGBEE_DEVICE:?Set ZIGBEE_DEVICE in .env}:/dev/ttyACM0"
+
+  mosquitto:
+    container_name: mosquitto
+    image: &mosquitto-image eclipse-mosquitto:2.0.22
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1883:1883"
+    volumes:
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/password_file:/mosquitto/config/password_file:ro
+      - ./mosquitto/acl_file:/mosquitto/config/acl_file:ro
+    environment:
+      MOSQUITTO_USER: ${MOSQUITTO_USER:-homeassistant}
+      MOSQUITTO_PASSWORD: ${MOSQUITTO_PASSWORD:?MOSQUITTO_PASSWORD must be set}
+  mosquitto-setup:
+    profiles: [ "setup" ]
+    image: *mosquitto-image
+    entrypoint: [ "mosquitto_passwd" ]
+    volumes:
+      - ./mosquitto:/mosquitto/config
+
+  postgres:
+    container_name: postgres
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data

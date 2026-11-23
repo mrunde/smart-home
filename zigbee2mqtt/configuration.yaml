@@ -9,17 +9,13 @@ mqtt:
   # MQTT base topic for zigbee2mqtt MQTT messages
   base_topic: zigbee2mqtt
   # MQTT server URL
-  server: 'mqtt://192.168.10.42'
-  # MQTT server authentication, uncomment if required:
-  # user: my_user
-  # password: my_password
+  server: 'mqtt://mosquitto:1883'
 
 # Webserver
 frontend:
   enabled: true
   # Custom port
   port: 8099
-  url: 'http://192.168.10.42'
 
 # Devices and groups config in separated files
 devices: devices.yaml
